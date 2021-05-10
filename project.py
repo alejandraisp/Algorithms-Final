@@ -7,6 +7,8 @@ class Vertex:
     def __init__(self,id):
         self.attributes = {}
         self.attributes['id'] = id
+        self.list = []
+        self.probability = 0
 
     def __str__(self):
         return str(self.attributes)
@@ -49,12 +51,27 @@ class Graph:
     def prob(self, i, j):
         return self.edges[(i.attributes['id'],j.attributes['id'])][1]
 
-# unfinished - no idea how to finish the recursion
+
 
     def Viterbi(self, s, v, count):
         if len(s) == 0:
-            return v
-        for i in self.vertices[v.attributes['id']]:
-            if self.sigma[(v.attributes['id'], i)] == s[count]:
-                j = self.id_to_v[i]
-                result = Viterbi(self, s[count:], j, count + 1)
+            self.list.append(v.get('id'))
+
+        else:
+            found = False
+
+            for i in self.vertices[v.attributes['id']]:
+                if self.sigma((v.attributes['id'], i)) == s[count] and found == False:
+                    self.list.append(v.get('id'))
+                    j = self.id_to_v[i]
+                    found = True
+                    Viterbi(self, s[count:], j, count + 1)
+
+        if found == False:
+            print("NO-SUCH-PATH!\n")
+        else:
+            return self.list
+
+
+
+    def Viterbiprob(self, s, v, count):
