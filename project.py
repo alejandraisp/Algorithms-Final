@@ -8,7 +8,7 @@ class Vertex:
     def __init__(self,id):
         self.attributes = {}
         self.attributes['id'] = id
-        self.list = []
+        self.matrix = [[]]
         self.probability = 0
 
     def __str__(self):
@@ -54,10 +54,10 @@ class Graph:
 
 
 
-    def Viterbi(self, s, v, count):
+    def Viterbi(self, s, v, count, row): #set count and row to 0
         # base case to check if finished check sounds
         if len(s) == 0:
-            self.list.append(v.get('id'))
+            self.matrix[row].append(v.get('id'))
 
         # identifier for whether the path is found
         else:
@@ -66,17 +66,17 @@ class Graph:
         #for every neighbor vertex check whether satisfy the sound; if yes, append the
         #vertex to the list and teace its neighbor next recursively
             for i in self.vertices[v.get('id')]:
-                if self.sigma((v.get('id'), i)) == s[count] and found == False:
-                    self.list.append(v.get('id'))
+                if self.sigma((v.get('id'), i)) == s[count]:
+                    self.matrix[row].append(v.get('id'))
                     j = self.id_to_v[i]
                     found = True
-                    Viterbi(self, s[count:], j, count + 1)
-
+                    Viterbi(self, s[count:], j, count + 1, row)
+                    row += 1
         # return NO-SUCH-PATH if found is false, if it is true, return the list
         if found == False:
             print("NO-SUCH-PATH!\n")
         else:
-            return self.list
+            return self.matrix[row]
 
 
 
@@ -85,24 +85,43 @@ class Graph:
     def Viterbiprob(self, s, v):
 
         #having the table record the probability and path record the exact path
-        table = [0]
-        path = [0, v]
+        table = [[]]
+        path = [[]]
 
-        for i in range(1, len(s)):
-            found = False
-            p = -10000000
-            for j in range(1, i + 1):
-                for k in self.vertices[path[j].get('id')]:
-                    if self.sigma((path[j].get('id'), k)) == s[j - 1]:
+        key_list = list(self.id_to_v.keys())
+        j = 0
+        for i in key_list:
+            table[j].append(i)
+            table[j].append(0)
+            j += 1
+
+        k = 0
+        for i in key_list:
+            path[j].append(i)
+            path[j].append(0)
+            path[j].append(v)
+            k += 1
+
+
+        found = False
+        row = 0
+
+        #for i in range(1, len(s) + 1):
+            for j in range(1, len(s) + 1):
+                orow = row
+                for k in self.vertices[path[orow][j + 1].get('id')]:
+                    if self.sigma((path[orow][j + 1].get('id'), k)) == s[j - 1]:
                         found = True
+                        while table[row][0] != k:
+                            row += 1
                         q = self.id_to_v[k]
                         # calculate the optimal conpounding probability using the table and max method
-                        p2 = prob(self, path[j], q) + table [j - 1]
-                        p = max(p, p2)    # with coresponding vertex q but dont know how to do it????????????
+                        p = prob(self, path[orow][j + 1], q) + table [orow][j]
+                            # with coresponding vertex q but dont know how to do it????????????
 
             #append the probability p to the table and the vertex q to the path
-            table.append(p)
-            path.append(q)
+            table[row].append(p)
+            path[row].append(q)
 
         # look for the identifier found to return either NO-SUCH-PATH or the sublist of the path
         if found == False:
